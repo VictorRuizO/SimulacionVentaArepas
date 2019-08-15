@@ -1,4 +1,4 @@
-
+# -*- coding: utf-8 -*-
 import random
 import simpy
 import numpy
@@ -6,17 +6,15 @@ import numpy
 ########################################################################################################################
 # Variables en entrada
 
-SEMILLA = 40  # Semilla generador
+SEMILLA = 40                    # Semilla generador
+TIEMPO_SIMULACION = 480         # Tiempo de la simulacion 8 Horas = 480 min
+LLEGADA_CLIENTES = 4            # Clientes llegan de acuerdo a una distribucion exponencial con media 4 minutos
 
-TIEMPO_SIMULACION = 480  # Tiempo de la simulacion 8 Horas = 480 min
+ATENCION_CLIENTES_NONE = 15     # Clientes que no realiza ninguna compra son atendidos en una distribucion
+                                # exponencial con media 1,5 minutos
 
-LLEGADA_CLIENTES = 4  # Clientes llegan de acuerdo a una distribucion exponencial con media 4 minutos
-
-ATENCION_CLIENTES_NONE = 15  # Clientes que no realiza ninguna compra son atendidos en una distribucion
-                             # exponencial con media 1,5 minutos
-
-ATENCION_CLIENTES_TODO = [5,10]  # Clientes que compran arepas con todoo son atendidos en una distribucion
-                                 # uniforme entre 5 y 10 minutos
+ATENCION_CLIENTES_TODO = [5,10] # Clientes que compran arepas con todoo son atendidos en una distribucion
+                                # uniforme entre 5 y 10 minutos
 
 ATENCION_CLIENTES_BEBE = [3,7]  # Clientes que compran arepas para bebe son atendidos en una distribucion
                                 # uniforme entre 3 y 7 minutos
@@ -24,13 +22,22 @@ ATENCION_CLIENTES_BEBE = [3,7]  # Clientes que compran arepas para bebe son aten
 ATENCION_CLIENTES_MORCILLA = 6  # Clientes que compran arepas con morcilla son atendidos en una distribucion
                                 # exponencial con media 6 minutos
 
+UTILIDAD_AREPAS_TODO = 750.0    # Utilidad que tiene las arepas con todoo
+UTILIDAD_AREPAS_BEBE = 550.0    # Utilidad que tiene las arepas para el bebe
+UTILIDAD_AREPAS_MORCILLA = 750.0# Utilidad que tiene las arepas con morcilla
+
 ########################################################################################################################
-# Variables desempeño
+# Variables estado
 COLA = 0
-MAX_COLA = 0
 ESPERA_CLIENTES = numpy.array([])
 
 ########################################################################################################################
+# Variables desempeño
+MAX_COLA = 0
+PROMEDIO_ESPERA = 0.0
+
+########################################################################################################################
+# Funciones utlizadas
 def llegada(env, numero, contador):
     for i in range(numero):
         c = cliente(env, 'Cliente %02d' % i, contador)
@@ -67,8 +74,8 @@ def cliente(env, nombre, servidor):
 
         print('%7.2f' % (env.now), " Sale el cliente ", nombre)
 
-
-# Inicio de la simulación
+########################################################################################################################
+# Inicio de la simulacion
 
 print('Sala de cine')
 random.seed(SEMILLA)
