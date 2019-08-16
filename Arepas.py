@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import random
+from builtins import print
+
 import simpy
 import numpy
 
@@ -38,53 +40,41 @@ PROMEDIO_ESPERA = 0.0
 
 ########################################################################################################################
 # Funciones utlizadas
-def llegada(env, numero, contador):
-    for i in range(numero):
-        c = cliente(env, 'Cliente %02d' % i, contador)
-        env.process(c)
-        tiempo_llegada = random.uniform(LLEGADA_CLIENTES[0], LLEGADA_CLIENTES[1])
-        yield env.timeout(tiempo_llegada)  # Yield retorna un objeto iterable
+def llegadaCliente(env,servidor):
+    i=1
+    while env.now<60:
+        print('%7.2f'%env.now,"Llega el cliente ",i)
+        process = accionCliente(env,servidor,i)
+        env.process(process)
+        nextCliente = numpy.random.exponential(scale=LLEGADA_CLIENTES)
+        yield env.timeout(5)
+        i+=1
 
 
-def cliente(env, nombre, servidor):
-    # El cliente llega y se va cuando es atendido
-    llegada = env.now
-    print('%7.2f' % (env.now), " Llega el cliente ", nombre)
+
+def accionCliente(env,servidor,numero):
     global COLA
-    global MAX_COLA
-    global ESPERA_CLIENTES
-    # Atendemos a los clientes (retorno del yield)
-    # With ejecuta un iterador sin importar si hay excepciones o no
     with servidor.request() as req:
-        # Hacemos la espera hasta que sea atendido el cliente
-        COLA += 1
-        if COLA > MAX_COLA:
-            MAX_COLA = COLA
+        COLA+=1
+        r = yield req
 
-        # print("Tamaño cola", COLA)
-        results = yield req
-        COLA = COLA - 1
-        espera = env.now - llegada
-        ESPERA_CLIENTES = numpy.append(ESPERA_CLIENTES, espera)
+        COLA-=1
 
-        print('%7.2f' % (env.now), " El cliente ", nombre, " espera a ser atendido ", espera)
+        yield env.timeout(8)
+        print('%7.2f' % (env.now), " Sale el cliente ", numero)
 
-        tiempo_atencion = random.uniform(ATENCION_CLIENTES[0], ATENCION_CLIENTES[1])
-        yield env.timeout(tiempo_atencion)
-
-        print('%7.2f' % (env.now), " Sale el cliente ", nombre)
 
 ########################################################################################################################
 # Inicio de la simulacion
 
-print('Sala de cine')
+print('Venta de Arepas')
 random.seed(SEMILLA)
 env = simpy.Environment()
 
 # Inicio del proceso y ejecución
 servidor = simpy.Resource(env, capacity=1)
-env.process(llegada(env, CLIENTES, servidor))
+env.process(llegadaCliente(env, servidor))
 env.run()
 
-print("Cola máxima ", MAX_COLA)
-print("Tiempo promedio de espera ", '%7.2f' % (numpy.mean(ESPERA_CLIENTES)))
+#print("Cola máxima ", MAX_COLA)
+#print("Tiempo promedio de espera ", '%7.2f' % (numpy.mean(ESPERA_CLIENTES)))
